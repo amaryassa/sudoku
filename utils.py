@@ -12,37 +12,45 @@ def showImage(img, name='my-image'):
 
 def preProcess(img):
     imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # CONVERT IMAGE TO GRAY SCALE
-    imgBlur = cv2.GaussianBlur(imgGray, (5, 5), 0, cv2.BORDER_DEFAULT)  # ADD GAUSSIAN BLUR
+    imgBlur = cv2.GaussianBlur(imgGray, (9, 9), 0, cv2.BORDER_DEFAULT)  # ADD GAUSSIAN BLUR
     imgThreshold = cv2.adaptiveThreshold(imgBlur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)  # APPLY ADAPTIVE THRESHOLD
-    return imgThreshold
+    
+     # invert it so the grid lines and text are white
+    # inverted = cv2.bitwise_not(imgThreshold, 0)
+
+    # get a rectangle kernel
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+    # morph it to remove some noise like random dots
+    morph = cv2.morphologyEx(imgThreshold, cv2.MORPH_OPEN, kernel)
+
+    # dilate to increase border size
+    result = cv2.dilate(morph, kernel, iterations=1)
+    return result
 
 
 
 def biggestContour(contours):
     biggest = np.array([])
     max_area = 0
+    bigCountour=None
     for i in contours:
         area = cv2.contourArea(i)
-        if area > 30000:
-            peri = cv2.arcLength(i, True)
-            approx = cv2.approxPolyDP(i, 0.02 * peri, True)
+        if area > 15000:
+            peri = cv2.arcLength(i, closed=True)
+            approx = cv2.approxPolyDP(i, 0.01 * peri, closed=True)
             if area > max_area and len(approx) == 4:
                 biggest = approx
                 max_area = area
-    return biggest,max_area
+                bigCountour=i
+    return biggest,max_area,bigCountour
+
 
 
 
 #### 3 - Reorder points for Warp Perspective
 def reorder(myPoints):
-   
     myPoints = myPoints.reshape((4, 2))
-
-    #print(myPoints.shape)
     myPointsNew = np.zeros((4, 1, 2), dtype=np.int32)
-    #print('*****')
-    #print(myPointsNew)
-    
     add = myPoints.sum(1)
     myPointsNew[0] = myPoints[np.argmin(add)]
     myPointsNew[3] =myPoints[np.argmax(add)]
@@ -103,7 +111,11 @@ def getPredectionOneImage(image, model, show=True):
 def getAllPreditions(boxes,model):
     result=[]
     for image in boxes:
-        result.append(getPredectionOneImage(image,model, False))
+        if type(image) == int:
+            result.append(0)
+        else:
+            image =cv2.bitwise_not(image)
+            result.append(getPredectionOneImage(image,model, False))
     return result
 
 #### 6 -  TO DISPLAY THE SOLUTION ON THE IMAGE
@@ -153,7 +165,121 @@ def displayMultipleImages(images):
     for i, image in enumerate(images):
         plt.subplot(num_rows, num_cols, i + 1)
         plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        plt.title("Image {}".format(i + 1))
+        plt.title("{}".format(i + 1))
         plt.axis('off')
 
     plt.show()
+    
+
+
+def grid_line_helper(img, shape_location, length=10):
+    clone = img.copy()
+    # if its horizontal lines then it is shape_location 1, for vertical it is 0
+    row_or_col = clone.shape[shape_location]
+    # find out the distance the lines are placed
+    size = row_or_col // length
+
+    # find out an appropriate kernel
+    if shape_location == 0:
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, size))
+    else:
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (size, 1))
+
+    # erode and dilate the lines
+    clone = cv2.erode(clone, kernel)
+    clone = cv2.dilate(clone, kernel)
+
+    return clone
+    
+def get_grid_lines(img, length=10):
+    horizontal = grid_line_helper(img, 1, length)
+    vertical = grid_line_helper(img, 0, length)
+    return vertical, horizontal
+
+
+def create_grid_mask(vertical, horizontal):
+    # combine the vertical and horizontal lines to make a grid
+    grid = cv2.add(horizontal, vertical)
+    # threshold and dilate the grid to cover more area
+    grid = cv2.adaptiveThreshold(grid, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 235, 2)
+    grid = cv2.dilate(grid, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)), iterations=2)
+
+    # find the list of where the lines are, this is an array of (rho, theta in radians)
+    pts = cv2.HoughLines(grid, .3, np.pi / 90, 200)
+
+    lines = draw_lines(grid, pts)
+    # extract the lines so only the numbers remain
+    mask = cv2.bitwise_not(lines)
+    return mask
+
+
+def draw_lines(img, lines):
+    # https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_houghlines/py_houghlines.html
+    clone = img.copy()
+    lines = np.squeeze(lines)
+
+    for rho, theta in lines:
+        # find out where the line stretches to and draw them
+        a = np.cos(theta)
+        b = np.sin(theta)
+        x0 = a * rho
+        y0 = b * rho
+        x1 = int(x0 + 1000 * (-b))
+        y1 = int(y0 + 1000 * a)
+        x2 = int(x0 - 1000 * (-b))
+        y2 = int(y0 - 1000 * a)
+        cv2.line(clone, (x1, y1), (x2, y2), (255, 255, 255), 2)
+    return clone
+
+def split_into_squares(warped_img):
+    squares = []
+
+    width = warped_img.shape[0] // 9
+
+    # find each square assuming they are of the same side
+    for j in range(9):
+        for i in range(9):
+            p1 = (i * width, j * width)  # Top left corner of a bounding box
+            p2 = ((i + 1) * width, (j + 1) * width)  # Bottom right corner of bounding box
+            squares.append(warped_img[p1[1]:p2[1], p1[0]:p2[0]])
+
+    return squares
+
+def clean_squares(squares):
+    cleaned_squares = []
+    i = 0
+
+    for square in squares:
+        new_img, is_number = clean_helper(square)
+
+        if is_number:
+            cleaned_squares.append(new_img)
+            i += 1
+
+        else:
+            cleaned_squares.append(0)
+
+    return cleaned_squares
+
+def clean_helper(img):
+    # print(np.isclose(img, 0).sum())
+    if np.isclose(img, 0).sum() / (img.shape[0] * img.shape[1]) >= 0.95:
+        return np.zeros_like(img), False
+
+    # if there is very little white in the region around the center, this means we got an edge accidently
+    height, width = img.shape
+    mid = width // 2
+    if np.isclose(img[:, int(mid - width * 0.4):int(mid + width * 0.4)], 0).sum() / (2 * width * 0.4 * height) >= 0.90:
+        return np.zeros_like(img), False
+
+    # center image
+    contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)
+    x, y, w, h = cv2.boundingRect(contours[0])
+
+    start_x = (width - w) // 2
+    start_y = (height - h) // 2
+    new_img = np.zeros_like(img)
+    new_img[start_y:start_y + h, start_x:start_x + w] = img[y:y + h, x:x + w]
+
+    return new_img, True
