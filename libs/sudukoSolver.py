@@ -112,11 +112,23 @@ def find_empty(bo):
 #         [0, 0, 0, 4, 1, 9, 0, 0, 5], 
 #         [0, 0, 0, 0, 0, 0, 0, 7, 0]]
 
+# dure2=[
+#     [7, 0, 9, 0, 0, 0, 0, 0, 0], 
+#     [0, 0, 0, 0, 0, 0, 0, 3, 5], 
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0], 
+#     [8, 0, 0, 0, 0, 0, 9, 0, 6], 
+#     [0, 5, 0, 0, 0, 3, 0, 0, 0], 
+#     [0, 0, 0, 0, 2, 0, 7, 0, 0], 
+#     [4, 0, 0, 6, 9, 0, 0, 0, 0], 
+#     [0, 3, 0, 0, 0, 0, 0, 8, 0], 
+#     [0, 0, 0, 7, 0, 0, 0, 0, 0]]
+# # dure2=60.429
 
 # start_time = time.time()
+# boardTest=dure2
 # try:
-#     yassa = solve(dure)
-#     print_board(dure)
+#     yassa = solve(boardTest)
+#     print_board(boardTest)
 # except:
 #     print('except')
 #     pass

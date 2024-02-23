@@ -150,13 +150,24 @@ def solve(board):
 #         [0, 6, 0, 0, 0, 0, 2, 8, 0], 
 #         [0, 0, 0, 4, 1, 9, 0, 0, 5], 
 #         [0, 0, 0, 0, 0, 0, 0, 7, 0]]
-    
-#     toTest=dure
-#     print(toTest)
-#     print_board(board)
-#     start_time = time.time()
-#     solve(toTest)
-#     print_board(toTest)
-#     end_time = time.time()
-#     execution_time = end_time - start_time
-#     print("Temps d'exécution:", execution_time, "secondes")
+
+# dure2=[
+#     [7, 0, 9, 0, 0, 0, 0, 0, 0], 
+#     [0, 0, 0, 0, 0, 0, 0, 3, 5], 
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0], 
+#     [8, 0, 0, 0, 0, 0, 9, 0, 6], 
+#     [0, 5, 0, 0, 0, 3, 0, 0, 0], 
+#     [0, 0, 0, 0, 2, 0, 7, 0, 0], 
+#     [4, 0, 0, 6, 9, 0, 0, 0, 0], 
+#     [0, 3, 0, 0, 0, 0, 0, 8, 0], 
+#     [0, 0, 0, 7, 0, 0, 0, 0, 0]]
+#     # dure2= 87.22199702262878 secondes
+# toTest=dure2
+# print(toTest)
+# print_board(toTest)
+# start_time = time.time()
+# solve(toTest)
+# print_board(toTest)
+# end_time = time.time()
+# execution_time = end_time - start_time
+# print("Temps d'exécution:", execution_time, "secondes")

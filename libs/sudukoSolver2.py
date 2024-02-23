@@ -90,12 +90,25 @@ def print_grid(grid):
 #             [0, 6, 0, 0, 0, 0, 2, 8, 0], 
 #             [0, 0, 0, 4, 1, 9, 0, 0, 5], 
 #             [0, 0, 0, 0, 0, 0, 0, 7, 0]]
+
+# dure2=[
+#     [7, 0, 9, 0, 0, 0, 0, 0, 0], 
+#     [0, 0, 0, 0, 0, 0, 0, 3, 5], 
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0], 
+#     [8, 0, 0, 0, 0, 0, 9, 0, 6], 
+#     [0, 5, 0, 0, 0, 3, 0, 0, 0], 
+#     [0, 0, 0, 0, 2, 0, 7, 0, 0], 
+#     [4, 0, 0, 6, 9, 0, 0, 0, 0], 
+#     [0, 3, 0, 0, 0, 0, 0, 8, 0], 
+#     [0, 0, 0, 7, 0, 0, 0, 0, 0]]
+# # dure2=43.694360971450806 secondes
+# grid=dure2
     
-#     start_time = time.time()    
-#     if solve_sudoku(grid):
-#         print_grid(grid)
-#     else:
-#         print("Pas de solution possible")
-#     end_time = time.time()
-#     execution_time = end_time - start_time
-#     print("Temps d'exécution:", execution_time, "secondes")
+# start_time = time.time()    
+# if solve_sudoku(grid):
+#     print_grid(grid)
+# else:
+#     print("Pas de solution possible")
+# end_time = time.time()
+# execution_time = end_time - start_time
+# print("Temps d'exécution:", execution_time, "secondes")
